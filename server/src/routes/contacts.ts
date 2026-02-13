@@ -14,7 +14,7 @@ const contactSchema = z.object({
     company: z.string().optional(),
 });
 
-// GET /api/contacts - List all contacts (with search and pagination)
+
 router.get('/', async (req, res) => {
     try {
         const { search, page = '1', limit = '10' } = req.query;
@@ -32,11 +32,6 @@ router.get('/', async (req, res) => {
             );
         }
 
-        // Get Total Count
-        // Note: Drizzle doesn't have a simple count() on query yet without raw sql or selecting all
-        // For efficiency in a real app better to use `db.select({ count: sql<number>\`count(*)\` })...`
-        // But for simplicity here, we can just fetch all matching ID's to count, or use `contacts.length` if dataset is small.
-        // Let's use a separate count query properly.
         const allContacts = await db.select().from(savedContacts).where(searchCondition);
         const total = allContacts.length;
         const totalPages = Math.ceil(total / limitNum);
