@@ -14,26 +14,50 @@ const contactSchema = z.object({
     company: z.string().optional(),
 });
 
-// GET /api/contacts - List all contacts (with search)
+// GET /api/contacts - List all contacts (with search and pagination)
 router.get('/', async (req, res) => {
     try {
-        const { search } = req.query;
+        const { search, page = '1', limit = '10' } = req.query;
+        const pageNum = parseInt(page as string) || 1;
+        const limitNum = parseInt(limit as string) || 10;
+        const offset = (pageNum - 1) * limitNum;
 
-        let query = db.select().from(savedContacts).orderBy(desc(savedContacts.created_at));
-
+        // Base search condition
+        let searchCondition = undefined;
         if (search && typeof search === 'string') {
             const searchTerm = `%${search}%`;
-            // @ts-ignore
-            query = db.select().from(savedContacts).where(
-                or(
-                    ilike(savedContacts.name, searchTerm),
-                    ilike(savedContacts.company, searchTerm)
-                )
-            ).orderBy(desc(savedContacts.created_at));
+            searchCondition = or(
+                ilike(savedContacts.name, searchTerm),
+                ilike(savedContacts.company, searchTerm)
+            );
         }
 
-        const contacts = await query;
-        res.json(contacts);
+        // Get Total Count
+        // Note: Drizzle doesn't have a simple count() on query yet without raw sql or selecting all
+        // For efficiency in a real app better to use `db.select({ count: sql<number>\`count(*)\` })...`
+        // But for simplicity here, we can just fetch all matching ID's to count, or use `contacts.length` if dataset is small.
+        // Let's use a separate count query properly.
+        const allContacts = await db.select().from(savedContacts).where(searchCondition);
+        const total = allContacts.length;
+        const totalPages = Math.ceil(total / limitNum);
+
+        // Get Paginated Data
+        const contacts = await db.select()
+            .from(savedContacts)
+            .where(searchCondition)
+            .orderBy(desc(savedContacts.created_at))
+            .limit(limitNum)
+            .offset(offset);
+
+        res.json({
+            data: contacts,
+            pagination: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch contacts' });
