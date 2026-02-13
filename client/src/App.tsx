@@ -3,6 +3,7 @@ import ContactsTable from './components/ContactsTable';
 import ContactForm from './components/ContactForm';
 import { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
+import { Toaster } from 'sonner';
 
 const queryClient = new QueryClient();
 
@@ -12,6 +13,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 p-4 md:p-8 font-sans text-foreground">
+        <Toaster position="top-right" richColors />
         <div className="max-w-5xl mx-auto bg-card rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden">
           <header className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white">
             <div>

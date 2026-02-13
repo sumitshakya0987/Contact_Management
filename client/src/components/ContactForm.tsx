@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { X, Save, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Validation Schema
 const schema = z.object({
@@ -32,8 +33,12 @@ export default function ContactForm({ onClose }: ContactFormProps) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['contacts'] });
+            toast.success('Contact added successfully');
             onClose();
         },
+        onError: () => {
+            toast.error('Failed to save contact');
+        }
     });
 
     const onSubmit = (data: FormData) => {
