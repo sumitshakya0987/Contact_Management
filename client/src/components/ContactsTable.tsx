@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import type { Contact, PaginatedResponse } from '../types';
 import { Search, Trash2, Phone, Mail, Building, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -9,12 +9,12 @@ import ConfirmationModal from './ConfirmationModal';
 export default function ContactsTable() {
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(window.innerWidth < 768 ? 2 : 5); // 2 for mobile, 5 for desktop
+    const [limit, setLimit] = useState(window.innerWidth < 768 ? 2 : 5); 
 
     useEffect(() => {
         const handleResize = () => {
             setLimit(window.innerWidth < 768 ? 2 : 5);
-            setPage(1); // Reset page to avoid out of bounds
+            setPage(1);
         };
 
         window.addEventListener('resize', handleResize);
@@ -26,12 +26,12 @@ export default function ContactsTable() {
 
     // Fetch Contacts with Pagination
     const { data, isLoading, error } = useQuery({
-        queryKey: ['contacts', search, page, limit], // Add limit to queryKey
+        queryKey: ['contacts', search, page, limit], 
         queryFn: async () => {
             const response = await api.get<PaginatedResponse<Contact>>(`/contacts?search=${search}&page=${page}&limit=${limit}`);
             return response.data;
         },
-        keepPreviousData: true, // Keep data while fetching new page
+        placeholderData: keepPreviousData,
     });
 
     const contacts = data?.data || [];
@@ -65,7 +65,7 @@ export default function ContactsTable() {
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value);
-        setPage(1); // Reset to page 1 on search
+        setPage(1); 
     };
 
     const renderContent = () => {
@@ -260,7 +260,7 @@ export default function ContactsTable() {
                 confirmLabel="Delete"
                 onConfirm={confirmDelete}
                 onCancel={() => setDeleteId(null)}
-                isLoading={deleteMutation.isLoading}
+                isLoading={deleteMutation.isPending}
             />
         </div>
     );
