@@ -1,0 +1,1 @@
+ALTER TABLE "saved_contacts" ALTER COLUMN "phone" SET NOT NULL;
